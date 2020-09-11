@@ -1,0 +1,86 @@
+(AttackerLosses, DefenderLosses)
+
+na = 3, nd = 2
+(1, 1) = 336446 /1000000  :  34 % Both Loose 1
+(2, 0) = 292113 /1000000  :  29 % Attacker looses 2
+(0, 2) = 371441 /1000000  :  37 % Defender looses 2
+
+na = 2, nd = 2
+(1, 1) = 324387 /1000000  :  32 % Both Loose 1
+(2, 0) = 448497 /1000000  :  45 % Attacker looses 2
+(0, 2) = 227116 /1000000  :  23 % Defender looses 2
+
+na = 1, nd = 2
+(1, 0) = 746223 /1000000  :  75 % Attacker looses 1
+(0, 1) = 253777 /1000000  :  25 % Defender looses 1
+
+na = 3, nd = 1
+(1, 0) = 340130 /1000000  :  34 % Attacker looses 1
+(0, 1) = 659870 /1000000  :  66 % Defender looses 1
+
+na = 2, nd = 1
+(1, 0) = 420679 /1000000  :  42 % Attacker looses 1
+(0, 1) = 579321 /1000000  :  58 % Defender looses 1
+
+na = 1, nd = 1
+(1, 0) = 584647 /1000000  :  58 % Attacker looses 1
+(0, 1) = 415353 /1000000  :  42 % Defender looses 1
+
+
+(out of 1 million trials for each)
+A = 2
+9922 wins, .99 %
+
+A = 3
+79148 wins, 7.9148 %
+
+A = 4
+206177 wins, 20.62 %
+
+A = 5
+358007 wins, 35.80 %
+
+A = 6
+506663 wins, 50.67 %
+
+A = 7
+638118 wins, 63.81 %
+
+A = 8
+736487 wins, 73.65 %
+
+A = 9
+818413 wins, 81.84 %
+
+A = 10
+873272 wins, 87.33 %
+
+A = 11
+916080 wins, 91.61 %
+
+A = 12
+943081 wins, 94.31 %
+
+A = 13
+964017 wins, 96.40 %
+
+A = 14
+975779 wins, 97.58 %
+
+A = 15
+985092 wins, 98.51 %
+
+A = 16
+990008 wins, 99.00 %
+
+A = 17
+994008 wins, 99.40 %
+
+A = 18
+996171 wins, 99.62 %
+
+A = 19
+997657 wins, 99.77 %
+
+A = 20
+998528 wins, 99.85 %
