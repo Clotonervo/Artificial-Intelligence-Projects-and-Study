@@ -1,4 +1,6 @@
 import random
+import matplotlib.pyplot as plt
+
 
 def roleDice():
     return random.randint(1,6)
@@ -33,13 +35,9 @@ def risk(attackerArmies, defenderArmies, attackerDice=3, defenderDice=2):
         # print(defenderRole)
         # print(attackerArmies)
         # print(defenderArmies)
+    return (attackerArmies, defenderArmies)
 
-    if(defenderArmies > 0):
-        # print("Defenders win!")
-        return 0
-    else:
-        # print("Attackers win!")
-        return 1
+
 
 
 def numArmiesLost(attackerDice=3, defenderDice=2):
@@ -105,25 +103,25 @@ if __name__ == '__main__':
     list = []
     d = {}
     numTimes = 1000000
-    for y in range(numTimes):
-        result = risk(6, 5)
-        list.append(result)
+    # for y in range(numTimes):
+    #     result = risk(6, 5)
+    #     list.append(result)
 
-    percent = "{:.2f}".format((sum(list)/numTimes) * 100)
-    # print("Results for", numTimes, "runs: Attacker wins ", sum(list))
-    print(sum(list), "wins,", percent, "%")
-    print()
+    # percent = "{:.2f}".format((sum(list)/numTimes) * 100)
+    # # print("Results for", numTimes, "runs: Attacker wins ", sum(list))
+    # print(sum(list), "wins,", percent, "%")
+    # print()
 
 
+    for x in range(numTimes):
+        key = risk(10,10)
+        if key not in d:
+            d[key] = 1
+        else:
+            d[key] += 1
 
-    # for x in range(numTimes):
-    #     key = numArmiesLost(1,1)
-    #     if key not in d:
-    #         d[key] = 1
-    #     else:
-    #         d[key] += 1
-    #
-    # for key in d:
-    #     print(key, "=", d[key], f"/{numTimes}  : ", (d[key]/numTimes) * 100, "%")
+    for key in d:
+        percent = "{:.2f}".format((d[key] / numTimes) * 100)
+        print(key, "=", d[key], f"/{numTimes}  : ", percent, "%")
 
 
