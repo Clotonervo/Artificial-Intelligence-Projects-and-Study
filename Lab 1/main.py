@@ -31,10 +31,6 @@ def risk(attackerArmies, defenderArmies, attackerDice=3, defenderDice=2):
         attackerDice = min(3, attackerArmies - 1)
         defenderDice = min(2, defenderArmies)
 
-        # print(attackerRole)
-        # print(defenderRole)
-        # print(attackerArmies)
-        # print(defenderArmies)
     return (attackerArmies, defenderArmies)
 
 
