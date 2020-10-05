@@ -408,9 +408,22 @@ public class theRobot extends JFrame {
     //       For example, the sonar string 1001, specifies that the sonars found a wall in the North and West directions, but not in the South and East directions
     void updateProbabilities(int action, String sonars) {
         // your code
+        double incorrectMoveProb = (1 - moveProb)/4;
+        double sensorInaccuracy = 1 - sensorAccuracy;
+
+
 
         myMaps.updateProbs(probs); // call this function after updating your probabilities so that the
                                    //  new probabilities will show up in the probability map on the GUI
+    }
+
+    void transitionModel(int action){
+        for(int i = 0; i < mundo.height; i++){
+            for(int j = 0; j < mundo.width; j++){
+                double belief = probs[i][j];
+                probs[i][j] = belief * moveProb;
+            }
+        }
     }
     
     // This is the function you'd need to write to make the robot move using your AI;
