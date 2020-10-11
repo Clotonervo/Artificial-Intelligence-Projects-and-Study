@@ -1,4 +1,6 @@
 
+import javafx.geometry.Pos;
+
 import javax.swing.*;
 import java.awt.event.*;
 import java.awt.Color;
@@ -8,6 +10,8 @@ import java.lang.*;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 import java.net.*;
@@ -239,7 +243,7 @@ class mySmartMap extends JComponent implements KeyListener {
 
 
 // This is the main class that you will add to in order to complete the lab
-public class theRobot extends JFrame {
+public class theRobot<struct> extends JFrame {
     // Mapping of actions to integers
     public static final int NORTH = 0;
     public static final int SOUTH = 1;
@@ -401,6 +405,35 @@ public class theRobot extends JFrame {
         
         myMaps.updateProbs(probs);
     }
+
+    final class Position {
+        public int x;
+        public int y;
+        public int action;
+        public Position(int x, int y, int action){
+            this.x = x;
+            this.y = y;
+            this.action = action;
+        }
+    }
+
+    List<Position> getNeighbors(int i, int j){
+        List<Position> neighbors = new ArrayList<>();
+        if(j != 0) {
+            neighbors.add(new Position(i, j-1, NORTH));
+        }
+        if(j != mundo.height - 1) {
+            neighbors.add(new Position(i, j+1, SOUTH));
+        }
+        if(i != mundo.width - 1){
+            neighbors.add(new Position(i+1, j, EAST));
+        }
+        if(i != 0) {
+            neighbors.add(new Position(i-1, j, WEST));
+        }
+
+        return neighbors;
+    }
     
     // TODO: update the probabilities of where the AI thinks it is based on the action selected and the new sonar readings
     //       To do this, you should update the 2D-array "probs"
@@ -408,20 +441,132 @@ public class theRobot extends JFrame {
     //       For example, the sonar string 1001, specifies that the sonars found a wall in the North and West directions, but not in the South and East directions
     void updateProbabilities(int action, String sonars) {
         // your code
-        double incorrectMoveProb = (1 - moveProb)/4;
-        double sensorInaccuracy = 1 - sensorAccuracy;
-
-
+        transitionModel(action);
+        sensorModel(sonars);
+        normalize();
 
         myMaps.updateProbs(probs); // call this function after updating your probabilities so that the
                                    //  new probabilities will show up in the probability map on the GUI
     }
 
     void transitionModel(int action){
-        for(int i = 0; i < mundo.height; i++){
-            for(int j = 0; j < mundo.width; j++){
-                double belief = probs[i][j];
-                probs[i][j] = belief * moveProb;
+        double incorrectMoveProb = (1 - moveProb)/4;
+        double[][] transitionProb = new double[probs.length][probs[0].length];
+
+        for(int i = 1; i < mundo.height; i++){
+            for(int j = 1; j < mundo.width; j++){
+                List<Position> neighbors = getNeighbors(i, j);
+                neighbors.add(new Position(i, j, STAY));
+
+                for(Position pos : neighbors){
+                    if(mundo.grid[pos.x][pos.y] == 1 && pos.action == action){
+                        transitionProb[i][j] += probs[i][j] * moveProb;
+                    }
+                    else if(mundo.grid[pos.x][pos.y] == 1){
+                        transitionProb[i][j] += probs[i][j] * incorrectMoveProb;
+                    }
+                    else if (pos.action == action) {
+                        transitionProb[pos.x][pos.y] += probs[i][j] * moveProb;
+                    }
+                    else {
+                        transitionProb[pos.x][pos.y] += probs[i][j] * incorrectMoveProb;
+                    }
+
+                }
+            }
+        }
+        probs = transitionProb;
+    }
+
+    void sensorModel(String sonars){
+        double sensorInaccuracy = 1 - sensorAccuracy;
+
+        for(int i = 1; i < mundo.height; i++) {
+            for (int j = 1; j < mundo.width; j++) {
+                if (mundo.grid[i][j] == 1) {
+                    continue;
+                }
+
+                String correctSensor = correctSensor(i, j);
+                double currentProb = probs[i][j];
+
+                for(int q = 0; q < correctSensor.length(); q++){
+                    if(correctSensor.charAt(q) == sonars.charAt(q)){
+                        currentProb = currentProb * sensorAccuracy;
+                    }
+                    else {
+                        currentProb = currentProb * sensorInaccuracy;
+                    }
+                }
+                probs[i][j] = probs[i][j] * currentProb;
+            }
+        }
+    }
+
+    String correctSensor(int i, int j){
+        StringBuilder sb = new StringBuilder();
+        List<Position> neighbors = getNeighbors(i, j);
+
+        for(Position pos: neighbors){
+            switch (pos.action) {
+                case NORTH:
+                    if(mundo.grid[pos.x][pos.y] == 1){
+                        sb.append("1");
+                    }
+                    else {
+                        sb.append('0');
+                    }
+                    break;
+                case SOUTH:
+                    if(mundo.grid[pos.x][pos.y] == 1){
+                        sb.append("1");
+                    }
+                    else {
+                        sb.append('0');
+                    }
+                    break;
+                case EAST:
+                    if(mundo.grid[pos.x][pos.y] == 1){
+                        sb.append("1");
+                    }
+                    else {
+                        sb.append('0');
+                    }
+                    break;
+                case WEST:
+                    if(mundo.grid[pos.x][pos.y] == 1){
+                        sb.append("1");
+                    }
+                    else {
+                        sb.append('0');
+                    }
+                    break;
+            }
+        }
+
+        return sb.toString();
+    }
+
+    void normalize(){
+        double sum = 0.0;
+
+        for(int i = 1; i < mundo.height; i++) {
+            for (int j = 1; j < mundo.width; j++) {
+                if (mundo.grid[i][j] == 1) {
+                    continue;
+                }
+                sum += probs[i][j];
+            }
+        }
+
+
+
+        for(int i = 1; i < mundo.height; i++) {
+            for (int j = 1; j < mundo.width; j++) {
+                if (mundo.grid[i][j] == 1) {
+                    continue;
+                }
+                probs[i][j] = probs[i][j]/sum;
             }
         }
     }
