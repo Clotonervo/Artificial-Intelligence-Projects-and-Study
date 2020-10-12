@@ -498,7 +498,7 @@ public class theRobot<struct> extends JFrame {
                         currentProb = currentProb * sensorInaccuracy;
                     }
                 }
-                probs[i][j] = probs[i][j] * currentProb;
+                probs[i][j] = currentProb;
             }
         }
     }
