@@ -483,7 +483,8 @@ public class theRobot<struct> extends JFrame {
 
         for(int i = 1; i < mundo.height; i++) {
             for (int j = 1; j < mundo.width; j++) {
-                if (mundo.grid[i][j] == 1) {
+                if (mundo.grid[i][j] != 0) {
+                    probs[i][j] = 0.0;
                     continue;
                 }
 
@@ -558,9 +559,7 @@ public class theRobot<struct> extends JFrame {
                 sum += probs[i][j];
             }
         }
-
-
-
+        
         for(int i = 1; i < mundo.height; i++) {
             for (int j = 1; j < mundo.width; j++) {
                 if (mundo.grid[i][j] == 1) {
