@@ -146,29 +146,26 @@ class SearchNode():
         """
         Compute the f-value for this node
         """
-        ######## TASK 1.3 BEGIN ##########
-        
-        #Modify these lines to implement the search algorithms (greedy, Uniform-cost or A*)
+
         self.h = heuristic(self, self.options)
         self.f_value = 0
 
         if self.options.type == 'g':
             #greedy search algorithm
-            self.f_value = 0 # Change this to implement greedy!
+            self.f_value = self.h
 
         elif self.options.type == 'u':
             #uniform cost search algorithm
-            self.f_value = 0 # Change this to implement uniform cost search!
+            self.f_value = self.cost
 
         elif self.options.type == 'a':
             #A* search algorithm
-            self.f_value = 0 # Change this to implement A*!
+            self.f_value = self.h + self.cost
 
         else:
             print('Invalid search type (-t) selected: Valid options are g, u, and a')
             sys.exit()
 
-        ######## TASK 1.3 END   ##########
 
     #Comparison operator. Don't modify this or best-first search might stop working
     def __lt__(self,other):
@@ -220,27 +217,46 @@ def tiles_out_of_row_column(puzzle):
     and returns the sum of these two numbers.
     Remember not to count the blank tile as being out of place, or the heuristic is inadmissible
     """
-    ######## TASK 1.4.1 BEGIN   ##########
+    return row_difference(puzzle) + column_difference(puzzle)
+    
 
-    # YOUR TASK 1.4.1 CODE HERE
-    
-    return 0 #change this
-    
-    ######## TASK 1.4.1 END   ##########
+def row_difference(puzzle):
+    rows = [[0,1,2], [3,4,5], [6,7,8]]
+    row_mismatch = 0
+
+    for i in range(0,len(puzzle.state)):
+        if puzzle.state[i] not in rows[get_tile_row(i)] and puzzle.state[i] != 0:
+            row_mismatch += 1
+    return row_mismatch
+
+
+def column_difference(puzzle):
+    columns = [[0,3,6], [1,4,7], [2,5,8]]
+    column_mismatch = 0
+
+    for i in range(0, len(puzzle.state)):
+        if puzzle.state[i] not in columns[get_tile_column(i)] and puzzle.state[i] != 0:
+            column_mismatch += 1
+    return column_mismatch
 
 def manhattan_distance_to_goal(puzzle):
     """
     This heuristic should calculate the sum of all the manhattan distances for each tile to get to 
     its goal position.  Again, make sure not to include the distance from the blank to its goal.
     """
-    
-    ######## TASK 1.4.2 BEGIN   #########
+    solutionPositions = [[0,0], [0,1], [0,2], [1,0], [1,1], [1,2], [2,0], [2,1], [2,2]]
+    distance = 0
+    for i in range(0, len(puzzle.state)):
+        if puzzle.state[i] == 0:
+            continue
+        x_solution = solutionPositions[puzzle.state[i]][0]
+        y_solution = solutionPositions[puzzle.state[i]][1]
+        current_y = get_tile_column(i)
+        current_x = get_tile_row(i)
+        manhattan_distance = abs(x_solution - current_x) + abs(y_solution - current_y)
+        distance += manhattan_distance
 
-    # YOUR TASK 1.4.2 CODE HERE
-    
-    return 0 #change this!
-    
-    ######## TASK 1.4.2 END   ##########  
+    return distance
 
     
 def get_tile_row(tile):
