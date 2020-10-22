@@ -281,6 +281,10 @@ def run_iterative_search(start_node):
 
     #Set algorithm to A* for user
     start_node.options.type = "a"
+
+    #Get initial f-value
+    start_node.compute_f_value()
+    f_limit = start_node.f_value + 1 #Start with an f_value + 1 to get other states than initial
     
     #Maximum f value limit
     max_f_limit = 40
@@ -290,7 +294,6 @@ def run_iterative_search(start_node):
     
     #Keep trying until our depth limit hits 40
     while f_limit < max_f_limit:
-        
         #Store visited nodes along the current search path
         visited = dict()
         visited['N'] = 0
@@ -302,7 +305,9 @@ def run_iterative_search(start_node):
         start_node.compute_f_value()
         
         #Run depth-limited search starting at initial node (which points to initial state)
-        path_length = run_dfs(start_node, f_limit, visited)
+        path_length, minimum_f_value = run_dfs(start_node, f_limit, visited)
+
+        # print(minimum_f_value)
     
         #See how many nodes we expanded on this iteration and add it to our total
         total_expanded += visited['N']
@@ -315,7 +320,7 @@ def run_iterative_search(start_node):
             return total_expanded, path_length
             
         # No solution was found at this depth limit, so increment our f-limit
-        f_limit += 1
+        f_limit = minimum_f_value
         
     # No solution was found at any f-limit, so return None,None (Which signifies no solution found)
     return None, None
@@ -333,24 +338,24 @@ def run_dfs(node, f_limit, visited):
     if node.puzzle.is_solved():
         # It is! Print out solution and return solution length
         print('Iterative Deepening A* SOLVED THE PUZZLE! SOLUTION = ', node.path)
-        return len(node.path)
+        return len(node.path), 0
 
-    print(node.f_value)
+    node.compute_f_value()
 
     # Check to see if the depth limit has been reached (number of actions that have been taken)
-    if node.f_value >= f_limit:
+    if node.f_value > f_limit:
         # It has. Return None, signifying that no path was found
-        return None
+        return None, node.f_value
 
     # Get the list of moves we can try from this node's state
     moves = node.puzzle.get_moves()
+    minimum_f_value = float('inf')
     
     # For each possible move
     for m in moves:
         #Execute the move/action
         node.puzzle.do_move(m)
         node.compute_f_value()
-
 
         #Add this move to the node's path
         node.path = node.path + m
@@ -362,12 +367,16 @@ def run_dfs(node, f_limit, visited):
             visited[node.puzzle.id()] = True
             
             #Recurse on this new state
-            path_length = run_dfs(node, f_limit, visited)
+            path_length, minimum_value = run_dfs(node, f_limit, visited)
             
             #Check to see if a solution was found down this path (return value of None means no)
             if path_length is not None:
                 #It was! Return this solution path length to whoever called us
-                return path_length
+                return path_length, 0
+
+            #Update minimum f_value
+            if minimum_value < minimum_f_value:
+                minimum_f_value = minimum_value
 
             #Remove this state from the visited list.  We only check for duplicates along current search path
             del visited[node.puzzle.id()]
@@ -382,7 +391,7 @@ def run_dfs(node, f_limit, visited):
     
     #Couldn't find a solution here or at any of my successors, so return None
     #This node is not on a solution path under the f-limit
-    return None
+    return None, minimum_f_value
         
 def run_best_first_search(fringe, options):
     """
