@@ -307,8 +307,6 @@ def run_iterative_search(start_node):
         #Run depth-limited search starting at initial node (which points to initial state)
         path_length, minimum_f_value = run_dfs(start_node, f_limit, visited)
 
-        # print(minimum_f_value)
-    
         #See how many nodes we expanded on this iteration and add it to our total
         total_expanded += visited['N']
         
