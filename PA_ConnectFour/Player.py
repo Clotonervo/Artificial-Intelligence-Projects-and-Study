@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 #Utils
 
@@ -70,6 +71,40 @@ class AIPlayer:
         self.player_string = 'Player {}:ai'.format(player_number)
         self.other_player_number = 1 if player_number == 2 else 2  #This is the id of the other player
 
+    def max_value(self, board, alpha, beta, depth, player, opponent):
+        valid_moves = get_valid_moves(board)
+
+        #If at the end of the search or end of game, return heuristic
+        if is_winning_state(board, 1) or depth == 0:
+            return self.evaluation_function(board)
+
+        v = -math.inf
+        for action in valid_moves:
+            new_board = np.copy(board)
+            make_move(new_board, action, player)
+            v = max(v, self.min_value(new_board, alpha, beta, depth - 1, player, opponent))
+            if v >= beta:
+                return v
+            alpha = max(alpha, v)
+        return v
+
+    def min_value (self, board, alpha, beta, depth, player, opponent):
+        valid_moves = get_valid_moves(board)
+
+        #If at the end of the search or end of game, return heuristic
+        if is_winning_state(board, 1) or depth == 0:
+            return self.evaluation_function(board)
+
+        v = math.inf
+        for action in valid_moves:
+            new_board = np.copy(board)
+            make_move(new_board, action, player)
+            v = min(v, self.max_value(new_board, alpha, beta, depth - 1, player, opponent))
+            if v <= alpha:
+                return v
+            beta = min(beta, v)
+        return v
+
     def get_alpha_beta_move(self, board):
         """
         Given the current state of the board, return the next move based on
@@ -89,30 +124,34 @@ class AIPlayer:
 
         RETURNS:
         The 0 based index of the column that represents the next move
-
-        function alphabeta(node, depth, α, β, maximizingPlayer) is
-            if depth = 0 or node is a terminal node then
-                return the heuristic value of node
-            if maximizingPlayer then
-                value := −∞
-                for each child of node do
-                    value := max(value, alphabeta(child, depth − 1, α, β, FALSE))
-                    α := max(α, value)
-                    if α ≥ β then
-                        break (* β cutoff *)
-                return value
-            else
-                value := +∞
-                for each child of node do
-                    value := min(value, alphabeta(child, depth − 1, α, β, TRUE))
-                    β := min(β, value)
-                    if β ≤ α then
-                        break (* α cutoff *)
-        return value
-
         """
-        return 0
+        valid_moves = get_valid_moves(board)
+
+        player = self.player_number
+        if player == 1:
+            opponent = 2
+        elif player == 2:
+            opponent = 1
+
+        best_move = 0
+        max_value = -math.inf
+        depth = 3
+
+        for action in valid_moves:
+            new_board = np.copy(board)
+            make_move(new_board, action, player)
+            print(new_board)
+            result = self.min_value(new_board, -math.inf, math.inf, depth, player, opponent)
+            print(result)
+            if result > max_value:
+                max_value = result
+                best_move = action
+
+        print(best_move)
+        return best_move
         # raise NotImplementedError('Whoops I don\'t know what to do')
+
+
 
     def get_expectimax_move(self, board):
         """
@@ -137,6 +176,110 @@ class AIPlayer:
         """
         raise NotImplementedError('Whoops I don\'t know what to do')
 
+    def evaluate_horizontal(self, board, player, opponent):
+        result = 0
+        num_adjecent = 0
+        opponent_adjecent = 0
+        for i in range(0, 6):
+            for j in range(0, 7):
+                if board[i][j] == player:
+                    num_adjecent += 1
+                elif board[i][j] != player and num_adjecent != 0:
+                    result += math.pow(10, num_adjecent)
+                    num_adjecent = 0
+
+                if board[i][j] == opponent:
+                    opponent_adjecent += 1
+                elif board[i][j] != opponent and opponent_adjecent != 0:
+                    result -= math.pow(10, opponent_adjecent)
+                    opponent_adjecent = 0
+
+                if j == 6 and opponent_adjecent != 0:
+                    result -= math.pow(10, opponent_adjecent)
+                elif j == 6 and num_adjecent != 0:
+                    result += math.pow(10, num_adjecent)
+
+        return result
+
+    def evaluate_vertical(self, board, player, opponent):
+        result = 0
+        num_adjecent = 0
+        opponent_adjecent = 0
+        for i in range(0, 7):
+            column = board[:,i]
+            for j in range(0, len(column)):
+                if column[j] == player:
+                    num_adjecent += 1
+                elif column[j] != player and num_adjecent != 0:
+                    result += math.pow(10, num_adjecent)
+                    num_adjecent = 0
+
+                if column[j] == opponent:
+                    opponent_adjecent += 1
+                elif column[j] != opponent and opponent_adjecent != 0:
+                    result -= math.pow(10, opponent_adjecent)
+                    opponent_adjecent = 0
+
+                if j == 5 and opponent_adjecent != 0:
+                    result -= math.pow(10, opponent_adjecent)
+                    opponent_adjecent = 0
+                elif j == 5 and num_adjecent != 0:
+                    result += math.pow(10, num_adjecent)
+                    num_adjecent = 0
+
+        return result
+
+#Todo: I might need to fix this part of the heuristic, but for now I think it should work ok, It double counts some diagonals, is this an issue?
+    def evaluate_diagonal(self, board, player, opponent):
+        result = 0
+        num_adjecent = 0
+        opponent_adjecent = 0
+        for i in range(0, 6):
+            for j in range(0, 7):
+                if i + 3 <= 5 and j + 3 <= 6:
+                    diagonal_list = [board[i][j], board[i+1][j+1], board[i+2][j+2], board[i+3][j+3]]
+                    for k in range(0, len(diagonal_list)):
+                        if diagonal_list[k] == player:
+                            num_adjecent += 1
+                        elif diagonal_list[k] != player and num_adjecent != 0:
+                            result += math.pow(10, num_adjecent)
+                            num_adjecent = 0
+
+                        if diagonal_list[k] == opponent:
+                            opponent_adjecent += 1
+                        elif diagonal_list[k] != opponent and opponent_adjecent != 0:
+                            result -= math.pow(10, opponent_adjecent)
+                            opponent_adjecent = 0
+
+                        if k == 3 and opponent_adjecent != 0:
+                            result -= math.pow(10, opponent_adjecent)
+                            opponent_adjecent = 0
+                        elif k == 3 and num_adjecent != 0:
+                            result += math.pow(10, num_adjecent)
+                            num_adjecent = 0
+                if i - 3 >= 0 and j - 3 >= 0:
+                    diagonal_list = [board[i][j], board[i-1][j-1], board[i-2][j-2], board[i-3][j-3]]
+                    for k in range(0, len(diagonal_list)):
+                        if diagonal_list[k] == player:
+                            num_adjecent += 1
+                        elif diagonal_list[k] != player and num_adjecent != 0:
+                            result += math.pow(10, num_adjecent)
+                            num_adjecent = 0
+
+                        if diagonal_list[k] == opponent:
+                            opponent_adjecent += 1
+                        elif diagonal_list[k] != opponent and opponent_adjecent != 0:
+                            result -= math.pow(10, opponent_adjecent)
+                            opponent_adjecent = 0
+
+                        if k == 3 and opponent_adjecent != 0:
+                            result -= math.pow(10, opponent_adjecent)
+                            opponent_adjecent = 0
+                        elif k == 3 and num_adjecent != 0:
+                            result += math.pow(10, num_adjecent)
+                            num_adjecent = 0
+
+        return result
 
     def evaluation_function(self, board):
         """
@@ -155,9 +298,21 @@ class AIPlayer:
 
         RETURNS:
         The utility value for the current board
+
+        check player horizontal num in row, subtract from other player streak
+
+        check player vertical streak, subtract from player vertical streak
+
+        check player diagonal streak, subtract form other player's vertical streak
         """
-        
-        return 0
+
+        player = self.player_number
+        if player == 1:
+            opponent = 2
+        elif player == 2:
+            opponent = 1
+
+        return self.evaluate_horizontal(board, player, opponent) + self.evaluate_vertical(board, player, opponent)
 
 
 class RandomPlayer:
