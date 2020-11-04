@@ -75,14 +75,20 @@ class AIPlayer:
         valid_moves = get_valid_moves(board)
 
         #If at the end of the search or end of game, return heuristic
-        if is_winning_state(board, 1) or depth == 0:
+        if is_winning_state(board, player):
+            print("---------------- win maxvalue", player)
+            return 1000000000
+        if is_winning_state(board, opponent):
+            print("---------------- win maxvalue", opponent)
+            return -1000000000
+        elif depth == 0:
             return self.evaluation_function(board)
 
         v = -math.inf
         for action in valid_moves:
             new_board = np.copy(board)
             make_move(new_board, action, player)
-            v = max(v, self.min_value(new_board, alpha, beta, depth - 1, player, opponent))
+            v = max(v, self.min_value(new_board, alpha, beta, depth - 1, opponent, player))
             if v >= beta:
                 return v
             alpha = max(alpha, v)
@@ -92,13 +98,19 @@ class AIPlayer:
         valid_moves = get_valid_moves(board)
 
         #If at the end of the search or end of game, return heuristic
-        if is_winning_state(board, 1) or depth == 0:
+        if is_winning_state(board, player):
+            print("---------------- win minvalue", player)
+            return 1000000000
+        if is_winning_state(board, opponent):
+            print("---------------- win minvalue", opponent)
+            return -1000000000
+        elif depth == 0:
             return self.evaluation_function(board)
 
         v = math.inf
         for action in valid_moves:
             new_board = np.copy(board)
-            make_move(new_board, action, player)
+            make_move(new_board, action, opponent)
             v = min(v, self.max_value(new_board, alpha, beta, depth - 1, player, opponent))
             if v <= alpha:
                 return v
@@ -135,7 +147,7 @@ class AIPlayer:
 
         best_move = 0
         max_value = -math.inf
-        depth = 3
+        depth = 4
 
         for action in valid_moves:
             new_board = np.copy(board)
@@ -181,7 +193,7 @@ class AIPlayer:
         num_adjecent = 0
         opponent_adjecent = 0
         for i in range(0, 6):
-            for j in range(0, 7):
+            for j in range(0, 4):
                 if board[i][j] == player:
                     num_adjecent += 1
                 elif board[i][j] != player and num_adjecent != 0:
@@ -229,7 +241,6 @@ class AIPlayer:
 
         return result
 
-#Todo: I might need to fix this part of the heuristic, but for now I think it should work ok, It double counts some diagonals, is this an issue?
     def evaluate_diagonal(self, board, player, opponent):
         result = 0
         num_adjecent = 0
@@ -242,20 +253,20 @@ class AIPlayer:
                         if diagonal_list[k] == player:
                             num_adjecent += 1
                         elif diagonal_list[k] != player and num_adjecent != 0:
-                            result += math.pow(10, num_adjecent)
+                            result += math.pow(2, num_adjecent)
                             num_adjecent = 0
 
                         if diagonal_list[k] == opponent:
                             opponent_adjecent += 1
                         elif diagonal_list[k] != opponent and opponent_adjecent != 0:
-                            result -= math.pow(10, opponent_adjecent)
+                            result -= math.pow(2, opponent_adjecent)
                             opponent_adjecent = 0
 
                         if k == 3 and opponent_adjecent != 0:
-                            result -= math.pow(10, opponent_adjecent)
+                            result -= math.pow(2, opponent_adjecent)
                             opponent_adjecent = 0
                         elif k == 3 and num_adjecent != 0:
-                            result += math.pow(10, num_adjecent)
+                            result += math.pow(2, num_adjecent)
                             num_adjecent = 0
                 if i - 3 >= 0 and j - 3 >= 0:
                     diagonal_list = [board[i][j], board[i-1][j-1], board[i-2][j-2], board[i-3][j-3]]
@@ -263,20 +274,20 @@ class AIPlayer:
                         if diagonal_list[k] == player:
                             num_adjecent += 1
                         elif diagonal_list[k] != player and num_adjecent != 0:
-                            result += math.pow(10, num_adjecent)
+                            result += math.pow(2, num_adjecent)
                             num_adjecent = 0
 
                         if diagonal_list[k] == opponent:
                             opponent_adjecent += 1
                         elif diagonal_list[k] != opponent and opponent_adjecent != 0:
-                            result -= math.pow(10, opponent_adjecent)
+                            result -= math.pow(2, opponent_adjecent)
                             opponent_adjecent = 0
 
                         if k == 3 and opponent_adjecent != 0:
-                            result -= math.pow(10, opponent_adjecent)
+                            result -= math.pow(2, opponent_adjecent)
                             opponent_adjecent = 0
                         elif k == 3 and num_adjecent != 0:
-                            result += math.pow(10, num_adjecent)
+                            result += math.pow(2, num_adjecent)
                             num_adjecent = 0
 
         return result
