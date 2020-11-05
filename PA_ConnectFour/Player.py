@@ -74,12 +74,7 @@ class AIPlayer:
     def max_value(self, board, alpha, beta, depth, player, opponent):
         valid_moves = get_valid_moves(board)
 
-        #If at the end of the search or end of game, return heuristic
         if is_winning_state(board, player):
-            print("---------------- win maxvalue", player)
-            return 1000000000
-        if is_winning_state(board, opponent):
-            print("---------------- win maxvalue", opponent)
             return -1000000000
         elif depth == 0:
             return self.evaluation_function(board)
@@ -97,13 +92,8 @@ class AIPlayer:
     def min_value (self, board, alpha, beta, depth, player, opponent):
         valid_moves = get_valid_moves(board)
 
-        #If at the end of the search or end of game, return heuristic
-        if is_winning_state(board, player):
-            print("---------------- win minvalue", player)
-            return 1000000000
         if is_winning_state(board, opponent):
-            print("---------------- win minvalue", opponent)
-            return -1000000000
+            return 1000000000
         elif depth == 0:
             return self.evaluation_function(board)
 
@@ -111,7 +101,8 @@ class AIPlayer:
         for action in valid_moves:
             new_board = np.copy(board)
             make_move(new_board, action, opponent)
-            v = min(v, self.max_value(new_board, alpha, beta, depth - 1, player, opponent))
+            result = self.max_value(new_board, alpha, beta, depth - 1, opponent, player)
+            v = min(v, result)
             if v <= alpha:
                 return v
             beta = min(beta, v)
@@ -140,6 +131,8 @@ class AIPlayer:
         valid_moves = get_valid_moves(board)
 
         player = self.player_number
+        opponent = 2
+
         if player == 1:
             opponent = 2
         elif player == 2:
@@ -152,14 +145,13 @@ class AIPlayer:
         for action in valid_moves:
             new_board = np.copy(board)
             make_move(new_board, action, player)
-            print(new_board)
+            if is_winning_state(new_board, player):
+                return action
             result = self.min_value(new_board, -math.inf, math.inf, depth, player, opponent)
-            print(result)
             if result > max_value:
                 max_value = result
                 best_move = action
 
-        print(best_move)
         return best_move
         # raise NotImplementedError('Whoops I don\'t know what to do')
 
@@ -190,105 +182,57 @@ class AIPlayer:
 
     def evaluate_horizontal(self, board, player, opponent):
         result = 0
-        num_adjecent = 0
-        opponent_adjecent = 0
+
         for i in range(0, 6):
-            for j in range(0, 4):
-                if board[i][j] == player:
-                    num_adjecent += 1
-                elif board[i][j] != player and num_adjecent != 0:
-                    result += math.pow(10, num_adjecent)
-                    num_adjecent = 0
+            for j in range(0, len(board[i]) - 3):
+                row = [board[i][j], board[i][j+1], board[i][j+2], board[i][j+3]]
+                player_tokens = row.count(player)
+                opponent_tokens = row.count(opponent)
 
-                if board[i][j] == opponent:
-                    opponent_adjecent += 1
-                elif board[i][j] != opponent and opponent_adjecent != 0:
-                    result -= math.pow(10, opponent_adjecent)
-                    opponent_adjecent = 0
-
-                if j == 6 and opponent_adjecent != 0:
-                    result -= math.pow(10, opponent_adjecent)
-                elif j == 6 and num_adjecent != 0:
-                    result += math.pow(10, num_adjecent)
+                if opponent_tokens == 0 and player_tokens != 0:
+                    result += math.pow(10, player_tokens)
+                elif opponent_tokens != 0 and player_tokens == 0:
+                    result -= math.pow(10, opponent_tokens)
 
         return result
 
     def evaluate_vertical(self, board, player, opponent):
         result = 0
-        num_adjecent = 0
-        opponent_adjecent = 0
+
         for i in range(0, 7):
             column = board[:,i]
-            for j in range(0, len(column)):
-                if column[j] == player:
-                    num_adjecent += 1
-                elif column[j] != player and num_adjecent != 0:
-                    result += math.pow(10, num_adjecent)
-                    num_adjecent = 0
+            for j in range(0, len(column) - 3):
+                row = [column[j], column[j + 1], column[j + 2], column[j + 3]]
+                player_tokens = row.count(player)
+                opponent_tokens = row.count(opponent)
 
-                if column[j] == opponent:
-                    opponent_adjecent += 1
-                elif column[j] != opponent and opponent_adjecent != 0:
-                    result -= math.pow(10, opponent_adjecent)
-                    opponent_adjecent = 0
-
-                if j == 5 and opponent_adjecent != 0:
-                    result -= math.pow(10, opponent_adjecent)
-                    opponent_adjecent = 0
-                elif j == 5 and num_adjecent != 0:
-                    result += math.pow(10, num_adjecent)
-                    num_adjecent = 0
+                if opponent_tokens == 0 and player_tokens != 0:
+                    result += math.pow(10, player_tokens)
+                elif opponent_tokens != 0 and player_tokens == 0:
+                    result -= math.pow(10, opponent_tokens)
 
         return result
 
     def evaluate_diagonal(self, board, player, opponent):
         result = 0
-        num_adjecent = 0
-        opponent_adjecent = 0
-        for i in range(0, 6):
-            for j in range(0, 7):
-                if i + 3 <= 5 and j + 3 <= 6:
-                    diagonal_list = [board[i][j], board[i+1][j+1], board[i+2][j+2], board[i+3][j+3]]
-                    for k in range(0, len(diagonal_list)):
-                        if diagonal_list[k] == player:
-                            num_adjecent += 1
-                        elif diagonal_list[k] != player and num_adjecent != 0:
-                            result += math.pow(2, num_adjecent)
-                            num_adjecent = 0
 
-                        if diagonal_list[k] == opponent:
-                            opponent_adjecent += 1
-                        elif diagonal_list[k] != opponent and opponent_adjecent != 0:
-                            result -= math.pow(2, opponent_adjecent)
-                            opponent_adjecent = 0
+        for op in [None, np.fliplr]:
+            op_board = op(board) if op else board
 
-                        if k == 3 and opponent_adjecent != 0:
-                            result -= math.pow(2, opponent_adjecent)
-                            opponent_adjecent = 0
-                        elif k == 3 and num_adjecent != 0:
-                            result += math.pow(2, num_adjecent)
-                            num_adjecent = 0
-                if i - 3 >= 0 and j - 3 >= 0:
-                    diagonal_list = [board[i][j], board[i-1][j-1], board[i-2][j-2], board[i-3][j-3]]
-                    for k in range(0, len(diagonal_list)):
-                        if diagonal_list[k] == player:
-                            num_adjecent += 1
-                        elif diagonal_list[k] != player and num_adjecent != 0:
-                            result += math.pow(2, num_adjecent)
-                            num_adjecent = 0
+            for i in range(1, board.shape[1] - 3):
+                for offset in [i, -i]:
+                    diag = np.diagonal(op_board, offset=offset)
+                    if len(diag) > 4:
+                        for j in range(0, len(diag)-3):
+                            section = [diag[j], diag[j+1], diag[j+2], diag[j+3]]
 
-                        if diagonal_list[k] == opponent:
-                            opponent_adjecent += 1
-                        elif diagonal_list[k] != opponent and opponent_adjecent != 0:
-                            result -= math.pow(2, opponent_adjecent)
-                            opponent_adjecent = 0
+                            player_tokens = section.count(player)
+                            opponent_tokens = section.count(opponent)
 
-                        if k == 3 and opponent_adjecent != 0:
-                            result -= math.pow(2, opponent_adjecent)
-                            opponent_adjecent = 0
-                        elif k == 3 and num_adjecent != 0:
-                            result += math.pow(2, num_adjecent)
-                            num_adjecent = 0
+                            if opponent_tokens == 0 and player_tokens != 0:
+                                result += math.pow(10, player_tokens)
+                            elif opponent_tokens != 0 and player_tokens == 0:
+                                result -= math.pow(10, opponent_tokens)
 
         return result
 
@@ -318,12 +262,13 @@ class AIPlayer:
         """
 
         player = self.player_number
+        opponent = 0
         if player == 1:
             opponent = 2
         elif player == 2:
             opponent = 1
 
-        return self.evaluate_horizontal(board, player, opponent) + self.evaluate_vertical(board, player, opponent)
+        return self.evaluate_horizontal(board, player, opponent) + self.evaluate_vertical(board, player, opponent) + self.evaluate_diagonal(board, player, opponent)
 
 
 class RandomPlayer:
