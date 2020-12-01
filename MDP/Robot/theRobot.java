@@ -570,16 +570,16 @@ public class theRobot<struct> extends JFrame {
         for(int i = 1; i < mundo.height; i++) {
             for (int j = 1; j < mundo.width; j++) {
                 if (mundo.grid[i][j] == 0) {
-                    Vs[i][j] = -1;
+                    Vs[i][j] = 0;
                 }
                 else if (mundo.grid[i][j] == 1) {
                     Vs[i][j] = 0;
                 }
                 else if (mundo.grid[i][j] == 2) {
-                    Vs[i][j] = -10;
+                    Vs[i][j] = -1000;
                 }
                 else {
-                    Vs[i][j] = 10;
+                    Vs[i][j] = 100000;
                 }
             }
         }
@@ -591,8 +591,7 @@ public class theRobot<struct> extends JFrame {
 
         for(Position pos : neighbors){
             if(mundo.grid[pos.x][pos.y] == 1 && pos.action == action){
-//                sum += Vs[i][j] * moveProb;
-                sum += 0;
+                sum += Vs[i][j] * moveProb;
             }
             else if(mundo.grid[pos.x][pos.y] == 1){
                 sum += Vs[i][j] * incorrectMoveProb;
@@ -608,7 +607,7 @@ public class theRobot<struct> extends JFrame {
     }
 
     void valueIteration() {
-        double delta = 0.1;
+        double delta = 0.001;
         double discount = 0.9;
         double currentChange = 0.0;
         intializeValueIteration();
@@ -655,8 +654,8 @@ public class theRobot<struct> extends JFrame {
         for(int i = 1; i < mundo.height; i++) {
             for (int j = 1; j < mundo.width; j++) {
                 List<Position> neighbors = getNeighbors(i, j);
-                double bestValue = 0.0;
-                Position bestAction = neighbors.get(0);
+                double bestValue = Double.MIN_VALUE;
+                Position bestAction = new Position(i, j, STAY);
 
                 for(Position pos : neighbors){
                     if(Vs[pos.x][pos.y] > bestValue){
@@ -682,6 +681,30 @@ public class theRobot<struct> extends JFrame {
         return maxEntry.getKey();  // default action for now
     }
 
+    int differentTraversal(){
+        Position current = new Position(0,0, STAY);
+        double bestValue = Double.MIN_VALUE;
+        int bestAction = 0;
+
+        for(int i = 1; i < mundo.height; i++) {
+            for (int j = 1; j < mundo.width; j++) {
+                if(probs[current.x][current.y] < probs[i][j]){
+                    current = new Position(i, j,STAY);
+                }
+            }
+        }
+
+        List<Position> neighbors = getNeighbors(current.x, current.y);
+        for(Position pos : neighbors){
+            if(Vs[pos.x][pos.y] > bestValue){
+                bestValue = Vs[pos.x][pos.y];
+                bestAction = pos.action;
+            }
+        }
+
+        return bestAction;
+    }
+
     void printStuff(double[][] thing) {
         for(int i = 0; i < mundo.height; i++) {
             for (int j = 0; j < mundo.width; j++) {
@@ -695,19 +718,16 @@ public class theRobot<struct> extends JFrame {
     void doStuff() {
         int action;
         
-        valueIteration();  // TODO: function you will write in Part II of the lab
+        valueIteration();
         initializeProbabilities();  // Initializes the location (probability) map
 //        printStuff(Vs);
-//        System.out.println(Vs);
-
-
         while (true) {
             try {
                 if (isManual)
                     action = getHumanAction();  // get the action selected by the user (from the keyboard)
                 else
-                    action = automaticAction(); // TODO: get the action selected by your AI;
-                                                // you'll need to write this function for part III
+                    action = automaticAction(); // you'll need to write this function for part III
+//                    action = differentTraversal(); // My own implementation
                 
                 sout.println(action); // send the action to the Server
 

@@ -155,6 +155,37 @@ class AIPlayer:
         return best_move
         # raise NotImplementedError('Whoops I don\'t know what to do')
 
+    def expectimax_max(self, board, depth, player, opponent):
+        valid_moves = get_valid_moves(board)
+
+        if is_winning_state(board, player):
+            return 1000000000
+        elif depth == 0:
+            return self.evaluation_function(board)
+
+        v = -math.inf
+        for action in valid_moves:
+            new_board = np.copy(board)
+            make_move(new_board, action, player)
+            v = max(v, self.expectimax_value(new_board, depth - 1, opponent, player))
+        return v
+
+    def expectimax_value(self, board, depth, player, opponent):
+        valid_moves = get_valid_moves(board)
+        probability = len(valid_moves)
+
+        if is_winning_state(board, opponent):
+            return -1000000000
+        elif depth == 0:
+            return self.evaluation_function(board)
+
+        v = 0
+        for action in valid_moves:
+            new_board = np.copy(board)
+            make_move(new_board, action, opponent)
+            result = self.expectimax_max(new_board, depth - 1, opponent, player)
+            v += result/probability
+        return v
 
 
     def get_expectimax_move(self, board):
@@ -178,7 +209,34 @@ class AIPlayer:
         RETURNS:
         The 0 based index of the column that represents the next move
         """
-        raise NotImplementedError('Whoops I don\'t know what to do')
+        valid_moves = get_valid_moves(board)
+
+        player = self.player_number
+        opponent = 2
+
+        if player == 1:
+            opponent = 2
+        elif player == 2:
+            opponent = 1
+
+        best_move = 0
+        max_value = -math.inf
+        depth = 4
+
+        for action in valid_moves:
+            new_board = np.copy(board)
+            make_move(new_board, action, player)
+            print(new_board)
+            if is_winning_state(new_board, player):
+                return action
+            result = self.expectimax_value(new_board, depth, player, opponent)
+            print(result)
+            if result > max_value:
+                max_value = result
+                best_move = action
+
+        return best_move
+        # raise NotImplementedError('Whoops I don\'t know what to do')
 
     def evaluate_horizontal(self, board, player, opponent):
         result = 0
