@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import random
 
 
 class MCTSNode:
@@ -25,8 +26,7 @@ class MCTSNode:
         self.w = 0 
 
         #c value to be used in the UCB calculation
-        self.c = np.sqrt(2) 
-    
+        self.c = math.sqrt(2)
 
     def print_tree(self):
         #Debugging utility that will print the whole subtree starting at this node
@@ -111,14 +111,25 @@ class MCTSNode:
         # If this state is terminal (meaning the game is over) AND it is a winning state for self.other_player_number
         #   Then we are done and the result is 1 (since this is from parent's perspective)
         if self.terminal and is_winning_state(self.board, self.other_player_number):
-            return 1
+            self.n += 1
+            self.w += 1
+            self.parent.back(-1)
+            return None
 
         # Else-if this state is terminal AND is a winning state for self.player_number
         #   Then we are done and the result is -1 (since this is from parent's perspective)
         elif self.terminal and is_winning_state(self.board, self.player_number):
-            return -1
+            self.n += 1
+            self.w += -1
+            self.parent.back(1)
+            return None
+
         elif self.terminal:
-            return 0
+            self.n += 1
+            self.w += 0
+            self.parent.back(0)
+            return None
+
         # Else-if this is not a terminal state (if it is terminal and a tie (no-one won, then result is 0))
         #   Then we need to perform the random rollout
         #      1. Make a copy of the board to modify
@@ -133,11 +144,12 @@ class MCTSNode:
             board_copy = np.copy(self.board)
             players_turn = self.player_number
             while(not is_winning_state(board_copy, self.player_number)
-                  or not is_winning_state(board_copy, self.other_player_number)
-                  or len(get_valid_moves(board_copy) is not 0)):
+                  and not is_winning_state(board_copy, self.other_player_number)
+                  and len(get_valid_moves(board_copy)) != 0):
 
-                valid_moves = get_valid_moves(board_copy)
-                move = np.random.choice(valid_moves)
+                valid_cols = get_valid_moves(board_copy)
+                move = random.choice(valid_cols)
+
                 make_move(board_copy, move, players_turn)
                 if players_turn == self.player_number:
                     players_turn = self.other_player_number
